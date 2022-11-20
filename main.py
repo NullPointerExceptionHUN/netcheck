@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+
+import socket
+import sys
+import time
+import random
+import os
+import dns  # dnspython, pypi, 2.2.1
+
+iplistdir = "/run/known-webservers-for-connectivity-test/latest"
+success = 10
+output = 100
+mode = 1  # 1 = TCP on port 80; 2 = DNS check; 3 = ICMP echo
+tcpweight = 33
+dnsweight = 33
+icmpweight = 33
+totalweight = tcpweight + dnsweight + icmpweight
+highestweight = max(tcpweight, dnsweight, icmpweight)
+lowestweight = min(tcpweight, dnsweight, icmpweight)
+
+while True:
+    # moderandomizer = random.randint(1, 100)
+    # if moderandomizer <= 33:
+    #    mode = 1
+    # elif 33 < moderandomizer < 66:
+    #    mode = 2
+    # elif moderandomizer >= 66:
+    #    mode = 3
+    try:
+        output = success / 10 * 100
+    except ZeroDivisionError:
+        output = 100
+    print(str(output) + " " + str(success))
+    if success >= 10:
+        success -= 1
+    try:
+        if mode == 1:  # TCP on port 80
+            s = socket.socket()
+            s.settimeout(500)
+            host = random.choice(os.listdir(iplistdir))
+            port = 80
+            print("connecting to: " + host + " on port " + str(port))
+            try:
+                s.connect((host, port))
+            except OSError:
+                pass
+            try:
+                if s.getpeername():
+                    print("connection successful")
+                    if success < 10:
+                        success += 1
+                        s.close()
+                    else:
+                        print("connection unsuccessful")
+                        if success > 0:
+                            success -= 1
+                        s.close()
+            except OSError:
+                print("connection unsuccessful")
+                if success > 0:
+                    success -= 1
+                    s.close()
+        # add other modes
+    except KeyboardInterrupt:
+        print("exiting...")
+        sys.exit()
+    time.sleep(0.5)

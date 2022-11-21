@@ -5,6 +5,7 @@ import sys
 import time
 import random
 import os
+import getopt
 # import dns  # dnspython, pypi, 2.2.1
 
 iplistdir = "/run/known-webservers-for-connectivity-test/latest"
@@ -17,6 +18,18 @@ icmpweight = 33
 totalweight = tcpweight + dnsweight + icmpweight
 highestweight = max(tcpweight, dnsweight, icmpweight)
 lowestweight = min(tcpweight, dnsweight, icmpweight)
+
+try:
+    opts, args = getopt.getopt(sys.argv, "hm:", ["help", "mark="])
+except getopt.GetoptError:
+    print("netcheck.py -m:<SO_MARK value> | netcheck.py --mark=<SO_MARK value>")
+    sys.exit(2)
+for opt, arg in opts:
+    if opt in ("-h", "--help"):
+        print("netcheck.py -m:<SO_MARK value> | netcheck.py --mark=<SO_MARK value>")
+        sys.exit()
+    elif opt in ("-m", "--mark"):
+        mark = arg
 
 while True:
     # moderandomizer = random.randint(1, 100)
@@ -36,6 +49,7 @@ while True:
     try:
         if mode == 1:  # TCP on port 80
             s = socket.socket()
+            s.getsockopt(socket.SOL_SOCKET, socket.SO_MARK, )
             s.settimeout(0.5)
             host = random.choice(os.listdir(iplistdir))
             port = 80

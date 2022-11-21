@@ -1,15 +1,15 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 import socket
 import sys
 import time
 import random
 import os
-import dns  # dnspython, pypi, 2.2.1
+# import dns  # dnspython, pypi, 2.2.1
 
 iplistdir = "/run/known-webservers-for-connectivity-test/latest"
-success = 10
-output = 100
+successcount = 10
+healthPercentage = 100
 mode = 1  # 1 = TCP on port 80; 2 = DNS check; 3 = ICMP echo
 tcpweight = 33
 dnsweight = 33
@@ -27,16 +27,16 @@ while True:
     # elif moderandomizer >= 66:
     #    mode = 3
     try:
-        output = success / 10 * 100
+        healthPercentage = successcount / 10 * 100
     except ZeroDivisionError:
-        output = 100
-    print(str(output) + " " + str(success))
-    if success >= 10:
-        success -= 1
+        healthPercentage = 100
+    print("health %: " + str(healthPercentage) + "; success count:" + str(successcount))
+    if successcount >= 10:
+        successcount -= 1
     try:
         if mode == 1:  # TCP on port 80
             s = socket.socket()
-            s.settimeout(500)
+            s.settimeout(0.5)
             host = random.choice(os.listdir(iplistdir))
             port = 80
             print("connecting to: " + host + " on port " + str(port))
@@ -47,18 +47,18 @@ while True:
             try:
                 if s.getpeername():
                     print("connection successful")
-                    if success < 10:
-                        success += 1
+                    if successcount < 10:
+                        successcount += 1
                         s.close()
                     else:
                         print("connection unsuccessful")
-                        if success > 0:
-                            success -= 1
+                        if successcount > 0:
+                            successcount -= 1
                         s.close()
             except OSError:
                 print("connection unsuccessful")
-                if success > 0:
-                    success -= 1
+                if successcount > 0:
+                    successcount -= 1
                     s.close()
         # add other modes
     except KeyboardInterrupt:
